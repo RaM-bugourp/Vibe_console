@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { PageTransition } from "../components/PageTransition";
+import { DbrepoManifestPanel } from "../components/DbrepoManifestPanel";
 import { Button, IconButton, ModalShell, StatusBadge, Toggle, cx } from "../components/ui";
 import type { Lang, ManagedMcpServer, ManagedSkill, SkillsMcpImportPreview, SkillsMcpState } from "../types";
 import "../styles/skills-prompts-pages.css";
@@ -44,6 +45,11 @@ export type SkillsMcpPageProps = {
   onToggleSkill: (id: string, enabled: boolean) => void | Promise<void>;
   onToggleMcp: (id: string, enabled: boolean) => void | Promise<void>;
   onSaveNote: (itemKind: SkillsMcpNoteKind, id: string, note: string) => Promise<boolean>;
+  dbrepoManifest?: import("../types").DbrepoManifestState | null;
+  dbrepoBusy?: string;
+  onDbrepoPreview?: MaybeAsyncAction;
+  onDbrepoImport?: MaybeAsyncAction;
+  onDbrepoAudit?: MaybeAsyncAction;
 };
 
 type NoteTarget = {
@@ -323,6 +329,11 @@ export function SkillsMcpPage({
   onToggleSkill,
   onToggleMcp,
   onSaveNote,
+  dbrepoManifest,
+  dbrepoBusy,
+  onDbrepoPreview,
+  onDbrepoImport,
+  onDbrepoAudit,
 }: SkillsMcpPageProps) {
   const copy = getCopy(lang);
   const tabId = useId();
@@ -500,6 +511,15 @@ export function SkillsMcpPage({
           )}
         </>
       )}
+
+      <DbrepoManifestPanel
+        lang={lang}
+        state={dbrepoManifest || null}
+        busy={dbrepoBusy}
+        onPreview={onDbrepoPreview || (() => undefined)}
+        onImport={onDbrepoImport || (() => undefined)}
+        onAudit={onDbrepoAudit || (() => undefined)}
+      />
 
       <ModalShell
         open={importOpen}

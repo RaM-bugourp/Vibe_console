@@ -2,6 +2,7 @@ import React from "react";
 import type { ReactNode } from "react";
 import {
   Blocks,
+  BotMessageSquare,
   Download,
   FileCode2,
   History,
@@ -26,6 +27,7 @@ export type AppTheme = "light" | "dark";
 
 export type AppTab =
   | "dashboard"
+  | "chat"
   | "gateway"
   | "gatewayObserve"
   | "gatewayScripts"
@@ -45,6 +47,7 @@ type NavItem = {
 
 const NAV_ITEMS: readonly NavItem[] = [
   { id: "dashboard", icon: LayoutDashboard, label: { zh: "概览", en: "Overview" } },
+  { id: "chat", icon: BotMessageSquare, label: { zh: "AI 对话", en: "AI Chat" } },
   { id: "provider", icon: Zap, label: { zh: "供应商", en: "Providers" } },
   { id: "sessions", icon: History, label: { zh: "会话管理", en: "Sessions" } },
   { id: "skillsMcp", icon: Blocks, label: { zh: "技能和MCP", en: "Skills & MCP" } },

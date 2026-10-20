@@ -43,7 +43,7 @@ pub(super) fn sanitize_dir_name(input: &str, fallback: &str) -> String {
     }
 }
 
-pub(super) fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
+pub(crate) fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
     ensure_directory(dst)?;
     for entry in fs::read_dir(src).map_err(|e| io_err(src, e))? {
         let entry = entry.map_err(|e| io_err(src, e))?;

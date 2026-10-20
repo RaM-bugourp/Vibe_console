@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
-const APP_DB_SCHEMA_VERSION: i64 = 3;
+const APP_DB_SCHEMA_VERSION: i64 = 4;
 
 struct DatabaseInitializer {
     migration_lock: Mutex<()>,
@@ -206,7 +206,19 @@ fn initialize_schema(conn: &Connection) -> Result<()> {
             codex_dir TEXT PRIMARY KEY,
             provider_id TEXT NOT NULL,
             updated_at TEXT NOT NULL
-        );",
+        );
+        CREATE TABLE IF NOT EXISTS app_import_audit (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            target TEXT NOT NULL,
+            status TEXT NOT NULL,
+            reason TEXT,
+            sha256 TEXT,
+            batch TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_app_import_audit_batch ON app_import_audit(batch);
+        CREATE INDEX IF NOT EXISTS idx_app_import_audit_created_at ON app_import_audit(created_at DESC);",
     )
     .map_err(|e| CodexxError::Database(e.to_string()))?;
     ensure_sqlite_column(

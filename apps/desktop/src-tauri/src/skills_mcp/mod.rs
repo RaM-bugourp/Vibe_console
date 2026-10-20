@@ -1,7 +1,9 @@
+mod dbrepo;
 mod mcp;
 mod skills;
 mod types;
 
+pub(crate) use dbrepo::{dbrepo_import_inner, dbrepo_list_audit_inner, dbrepo_preview_inner, DbRepoAudit, DbRepoResult};
 pub(crate) use mcp::{sort_managed_mcp_servers, toggle_codex_mcp_inner};
 pub(crate) use skills::{
     check_skill_updates_inner, install_skill_zip_inner, normalize_legacy_zip_skill_dirs,

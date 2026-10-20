@@ -15,6 +15,7 @@ import { SkillsMcpPage, type SkillsMcpNoteKind } from "./pages/SkillsMcpPage";
 import { GatewayPage } from "./pages/GatewayPage";
 import { GatewayObservePage } from "./pages/GatewayObservePage";
 import { GatewayScriptsPage } from "./pages/GatewayScriptsPage";
+import { ChatEditorPage } from "./pages/ChatEditorPage";
 import { ProvidersPage, type ProviderCopy, type ProviderRow } from "./pages/ProvidersPage";
 import { AppShell, type AppTab, type AppTheme } from "./components/AppShell";
 import {
@@ -37,6 +38,7 @@ import type {
   BuiltinPromptStatus,
   CodexDesktopRestartResult,
   CodexState,
+  DbrepoManifestState,
   GatewayProcessState,
   ImportResult,
   InstructionMode,
@@ -764,6 +766,8 @@ function App() {
   const [updatePromptOpen, setUpdatePromptOpen] = React.useState(false);
   const [sessionStatus, setSessionStatus] = React.useState<SessionSyncStatus | null>(null);
   const [skillsMcpState, setSkillsMcpState] = React.useState<SkillsMcpState | null>(null);
+  const [dbrepoManifest, setDbrepoManifest] = React.useState<DbrepoManifestState | null>(null);
+  const [dbrepoBusy, setDbrepoBusy] = React.useState("");
   const [skillsMcpImportPreview, setSkillsMcpImportPreview] = React.useState<SkillsMcpImportPreview | null>(null);
   const [skillsMcpImportOpen, setSkillsMcpImportOpen] = React.useState(false);
   const [startupDiagnostics, setStartupDiagnostics] = React.useState<StartupDiagnostics | null>(null);
@@ -2211,6 +2215,26 @@ function App() {
       && configDirKey === activeConfigDirKeyRef.current
   ), []);
 
+  const runDbrepoCommand = React.useCallback(async (kind: "preview" | "import" | "audit") => {
+    setDbrepoBusy(kind);
+    try {
+      if (kind === "audit") {
+        const audits = await invoke<unknown[]>("dbrepo_list_audit", { batch: null });
+        setDbrepoManifest((current) => ({ ...(current || { manifest: null }), audit: { status: "ok", message: `${audits.length} audit records` } }));
+      } else {
+        const command = kind === "preview" ? "dbrepo_preview" : "dbrepo_import";
+        const result = await invoke<DbrepoManifestState>(command, { manifestPath: null, configDir: configDir || null });
+        setDbrepoManifest(result);
+      }
+    } finally {
+      setDbrepoBusy("");
+    }
+  }, [configDir]);
+
+  const previewDbrepoManifest = React.useCallback(() => runDbrepoCommand("preview"), [runDbrepoCommand]);
+  const importDbrepoManifest = React.useCallback(() => runDbrepoCommand("import"), [runDbrepoCommand]);
+  const auditDbrepoManifest = React.useCallback(() => runDbrepoCommand("audit"), [runDbrepoCommand]);
+
   const loadSkillsMcp = React.useCallback(async ({ quiet = false }: { quiet?: boolean } = {}) => {
     const request = beginSkillsMcpRequest();
     const actionToken = quiet ? null : beginActionBusy("loadSkillsMcp");
@@ -2747,6 +2771,7 @@ function App() {
       isMacRuntime={isMacRuntime}
       contentClassName={cx(
         tab === "sessions" && "cx-app-content--sessions",
+        tab === "chat" && "cx-app-content--workbench",
         (
         (tab === "provider" && providerMode === "list")
           || tab === "gateway"
@@ -2805,6 +2830,7 @@ function App() {
               && tab !== "gateway"
               && tab !== "gatewayObserve"
               && tab !== "gatewayScripts"
+              && tab !== "chat"
               && (
                 <CodexStateLoading lang={lang} loading={refreshing} />
               )}
@@ -3045,6 +3071,11 @@ function App() {
                 onToggleMcp={toggleMcpEnabled}
                 noteBusyKey={skillsMcpNoteBusy}
                 onSaveNote={saveSkillsMcpNote}
+                dbrepoManifest={dbrepoManifest}
+                dbrepoBusy={dbrepoBusy}
+                onDbrepoPreview={previewDbrepoManifest}
+                onDbrepoImport={importDbrepoManifest}
+                onDbrepoAudit={auditDbrepoManifest}
               />
             )}
 
@@ -3127,6 +3158,23 @@ function App() {
                 loaded={state.configExists ? t.toml.loaded : t.dashboard.missing}
                 isLoaded={state.configExists}
                 preview={<TomlPreview text={state.configText || t.toml.missingText} />}
+              />
+            )}
+
+            {(tab === "chat" || visitedTabs.has("chat")) && (
+              <ChatEditorPage
+                lang={lang}
+                active={tab === "chat"}
+                providerModels={availableProviderModels.map((m) => m.id)}
+                historySessions={visibleSessions}
+                gatewayRunning={Boolean(gatewayProcess?.managedByCodexX || gatewayProcess?.degraded)}
+                gatewayPort={gatewayPort}
+                onGatewayRequest={(method, path, body) => gatewayCommands.request({
+                  listenPort: gatewayPort,
+                  method: method as "GET" | "POST" | "PUT",
+                  path,
+                  body,
+                })}
               />
             )}
 

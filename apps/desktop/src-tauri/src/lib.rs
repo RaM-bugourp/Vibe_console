@@ -107,10 +107,11 @@ use sessions::{
     SessionSyncStatus,
 };
 use skills_mcp::{
-    build_skills_mcp_state_inner, check_skill_updates_inner, import_existing_skills_mcp_inner,
+    build_skills_mcp_state_inner, check_skill_updates_inner, dbrepo_import_inner,
+    dbrepo_list_audit_inner, dbrepo_preview_inner, import_existing_skills_mcp_inner,
     install_skill_zip_inner, preview_existing_skills_mcp_inner, save_skills_mcp_note_inner,
     toggle_codex_mcp_inner, toggle_codex_skill_inner, SkillsMcpActionResult,
-    SkillsMcpImportPreview, SkillsMcpState,
+    SkillsMcpImportPreview, SkillsMcpState, DbRepoAudit, DbRepoResult,
 };
 #[cfg(test)]
 use skills_mcp::{
@@ -439,6 +440,21 @@ fn startup_diagnostics_inner(config_dir: Option<String>) -> Result<StartupDiagno
         summary,
         items,
     })
+}
+
+#[tauri::command]
+async fn dbrepo_preview(manifest_path: Option<String>, config_dir: Option<String>) -> Result<DbRepoResult> {
+    tauri::async_runtime::spawn_blocking(move || dbrepo_preview_inner(manifest_path, config_dir)).await.map_err(|e| CodexxError::Config(format!("DBrepo 预览失败: {e}")))?
+}
+
+#[tauri::command]
+async fn dbrepo_import(manifest_path: Option<String>, config_dir: Option<String>) -> Result<DbRepoResult> {
+    tauri::async_runtime::spawn_blocking(move || dbrepo_import_inner(manifest_path, config_dir)).await.map_err(|e| CodexxError::Config(format!("DBrepo 导入失败: {e}")))?
+}
+
+#[tauri::command]
+async fn dbrepo_list_audit(batch: Option<String>) -> Result<Vec<DbRepoAudit>> {
+    tauri::async_runtime::spawn_blocking(move || dbrepo_list_audit_inner(batch)).await.map_err(|e| CodexxError::Config(format!("读取 DBrepo 审计失败: {e}")))?
 }
 
 #[tauri::command]
@@ -1545,6 +1561,9 @@ pub fn run() {
             get_about_info,
             restart_codex_desktop,
             check_app_update,
+            dbrepo_preview,
+            dbrepo_import,
+            dbrepo_list_audit,
             get_skills_mcp_state,
             preview_existing_skills_mcp,
             import_existing_skills_mcp,

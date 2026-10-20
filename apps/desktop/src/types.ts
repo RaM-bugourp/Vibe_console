@@ -308,6 +308,22 @@ export type SkillsMcpImportPreview = {
   warnings: string[];
 };
 
+export type DbrepoManifestAudit = {
+  status?: "ok" | "warning" | "error" | string;
+  message?: string;
+  issues?: string[];
+  [key: string]: unknown;
+};
+
+export type DbrepoManifestState = {
+  manifest: unknown;
+  source?: string | null;
+  preview?: string | null;
+  audit?: DbrepoManifestAudit | null;
+  imported?: boolean;
+  warnings?: string[];
+};
+
 export type DiagnosticItem = {
   key: string;
   label: string;

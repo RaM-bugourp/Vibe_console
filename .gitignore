@@ -43,3 +43,26 @@ codex-new-ui/
 
 # Release artifacts
 release-assets/
+
+# Non-product local captures and personal media
+.playwright-mcp/
+debug.log
+assets/
+docs/screenshots/prompt-effects/
+
+# Personal/local content: never publish to the control-panel repository
+data/
+examples/
+scripts/
+start-dev.bat
+codex-instruct.py
+.playwright-mcp/
+.codex/
+.codexx/
+.cc-switch/
+.agents/
+.zcode/
+**/SKILL.md
+**/skills/
+**/hooks/
+**/mcp*.json
